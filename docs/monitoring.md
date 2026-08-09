@@ -46,7 +46,8 @@ exact/semantic/generated split, abstention, risk/PII blocks, provider/validation
 
 ## Verification evidence Slice 5
 
-Evidence получен 2026-08-09 на synthetic fixtures без `GROQ_API_KEY`.
+Evidence получен 2026-08-09 на synthetic fixtures. Default/semantic проверки выполнены offline;
+внешний Groq check — отдельно с локально заданным `GROQ_API_KEY`, значение которого не логировалось.
 
 ### Offline suite
 
@@ -76,6 +77,22 @@ RUN_SEMANTIC_TESTS=1 .venv/bin/python -m pytest -q -m semantic -rs
 связность semantic/generated path, но не relevance quality и не корректность threshold `0.82` на
 реальных данных. Warning о смене pooling multilingual MiniLM остаётся recalibration trigger.
 
+### External Groq integration
+
+```bash
+RUN_GROQ_TESTS=1 .venv/bin/python -m pytest -q -m groq -rs
+RUN_SEMANTIC_TESTS=1 RUN_GROQ_TESTS=1 .venv/bin/python -m pytest -q -rs
+```
+
+Targeted result: `1 passed, 17 deselected, 2 warnings in 6.48s`. Полный suite с обоими opt-in
+checks: `18 passed, 4 warnings in 7.15s`, без skipped tests.
+
+Отдельный synthetic probe для `profile_update` завершился за `6.081s`: Groq adapter вызвал
+`qwen/qwen3.6-27b`, вернул валидный grounded draft с evidence `kb-profile-name`, а policy выбрала
+`operator_review_with_draft`. Это подтверждает текущую доступность provider/model, JSON contract,
+evidence validation и безопасный запрет generated auto-send. Один probe не подтверждает p95/p99,
+стабильность provider, factual quality, cost или privacy suitability для реальных данных.
+
 ### Docker HTTP smoke
 
 Image `ai-hub-support-poc:slice5` успешно собран и запущен с одним worker. `/health` вернул
@@ -94,8 +111,8 @@ Image `ai-hub-support-poc:slice5` успешно собран и запущен 
 - Semantic pass доказывает работоспособность integration, но не precision/recall retrieval.
 - Docker smoke не проверяет durable processing, restart recovery, несколько replicas, настоящую
   channel delivery или SLA первого ответа 15 минут.
-- Пока Groq check не выполнен, неизвестны фактические provider latency, текущая model availability,
-  cost и валидность ответа реального Qwen adapter.
+- Groq probe подтвердил один synthetic request, но не даёт статистики provider latency/availability,
+  cost и output quality; для этого нужны повторные измерения и размеченная evaluation set.
 - Два dependency warnings не сломали suite, но TestClient migration и FastEmbed recalibration должны
   быть закрыты перед обновлением runtime dependencies.
 

@@ -115,7 +115,7 @@ in-memory state, polling и Docker.
 
 **Verification:** offline pytest, API contract tests, Docker build и polling smoke-test.
 
-**Checkpoint:** реализация, offline suite (`16 passed`), отдельный local semantic check и Docker
-polling smoke завершены; результаты и evidence boundary записаны в monitoring. Optional Groq network
-check не запускался без локального `GROQ_API_KEY` и не считается подтверждённым evidence; следующий
-слайс не начинается автоматически.
+**Checkpoint:** реализация, Docker polling smoke и полный suite завершены: `18 passed` с включёнными
+local semantic и external Groq checks. Synthetic Groq probe вернул grounded operator-review draft за
+`6.081s`; результаты и evidence boundary записаны в monitoring. Следующий слайс не начинается
+автоматически.
