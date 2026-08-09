@@ -8,7 +8,9 @@
 - ML: class distribution, confidence, abstention, offline/online quality, drift и retrieval relevance.
 - Product/business: first response SLA, operator touch rate, CSAT, reopen rate и доля безопасной
   автоматизации.
-- Cost: LLM calls, tokens, cache/dedup hit rate, стоимость на тикет и дневной budget burn.
+- Resolution: direct-answer hit rate, exact/semantic split, LLM avoidance rate, fallback rate и
+  operator-review rate.
+- Cost: LLM calls, tokens, cache/dedup hit rate, стоимость ответа/тикета и дневной budget burn.
 - Safety: PII redaction, blocked auto-actions, prompt-injection signals и audit completeness.
 
 ## Открытые решения

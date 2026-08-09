@@ -2,12 +2,14 @@
 
 ## Правила статусов
 
-- `PLANNED` — граница обозначена, но реализация и отдельный issue ещё не начаты.
 - `IN_PROGRESS` — текущий слайс; для него существует issue в GitHub Project.
 - `BLOCKED` — продолжение невозможно без решения или внешнего изменения.
 - `DONE` — результат проверен, checkpoint записан, следующий слайс не начат автоматически.
 
-Статус меняется прямо в этом файле. Issue создаётся по мере необходимости только при старте слайса.
+Карта содержит только фактически начатые или завершённые слайсы. Будущие слайсы заранее не
+планируются и не добавляются как placeholders. Новый слайс появляется сразу со статусом
+`IN_PROGRESS` после явного checkpoint владельца; одновременно для него создаётся issue. В каждый
+момент активен не более чем один слайс.
 
 ## Slice 1: Repository bootstrap
 
@@ -26,69 +28,25 @@ repository-level Project link и один issue Slice 1.
 **Verification:** проверить файлы и ссылки, Owner Context, Git history, private remote, Project link и
 единственный slice issue.
 
-**Checkpoint:** bootstrap завершён; Slice 2 остаётся `PLANNED` и не имеет отдельного issue.
+**Checkpoint:** bootstrap завершён; следующий слайс не создаётся до отдельного решения владельца.
 
-## Slice 2: Thin system design contract
+## Slice 2: Ticket processing flow
 
-**Status:** `PLANNED`
+**Status:** `IN_PROGRESS`
 
-**Goal:** определить минимальные архитектурные, API, data и ML-контракты перед реализацией.
+**Issue:** [#2 — Slice 2: Ticket processing flow](https://github.com/sarrumkin/ai-hub-support-poc/issues/2)
 
-**Open questions:** risk taxonomy, входные/выходные схемы, audit record, PoC ML/LLM baseline,
-confidence policy, persistence и способ моделирования async path.
+**Goal:** определить end-to-end flow обработки тикета от ingress до ответа пользователю или передачи
+оператору.
 
-**Verification:** непротиворечивые контракты, Mermaid data flow и явно закрытые decision gates.
+**Included:** sync/async boundaries, outcomes и пользовательские статусы, KB-first resolution,
+generation и human fallbacks, минимальные response contracts и Mermaid pipeline.
 
-**Checkpoint:** risky tracer path не начинается до согласования контрактов.
+**Not included:** реализация PoC, полная risk taxonomy, полный input/audit contract, выбор ML/LLM
+baseline и production infrastructure.
 
-## Slice 3: Risky ticket tracer path
+**Verification:** непротиворечивый Mermaid flow, явные policy boundaries, корректные пользовательские
+статусы, fallback для каждого отказа и согласованность связанных документов.
 
-**Status:** `PLANNED`
-
-**Goal:** провести risky или low-confidence mock-ticket от API/CLI до human review и audit log.
-
-**Open questions:** конкретные rules/ML-компоненты, формат локального audit storage и fixture taxonomy.
-
-**Verification:** unit/integration tests и воспроизводимый risky demo без автоматического ответа.
-
-**Checkpoint:** согласовать audit evidence перед happy path.
-
-## Slice 4: Happy ticket tracer path
-
-**Status:** `PLANNED`
-
-**Goal:** провести безопасный тикет через classification, retrieval и draft generation до audit log.
-
-**Open questions:** retrieval baseline, knowledge base format, mock или реальный model adapter, пороги
-confidence и способ показать асинхронную генерацию.
-
-**Verification:** happy-path test, retrieval check, fallback test и demo обоих обязательных путей.
-
-**Checkpoint:** подтвердить, что PoC доказывает архитектурную идею без production theater.
-
-## Slice 5: Reliability, monitoring and economics
-
-**Status:** `PLANNED`
-
-**Goal:** закрыть highload, degradation, monitoring, model/input drift и cost-control решения.
-
-**Open questions:** headroom для всплесков, стартовые alert thresholds, модель стоимости LLM и
-минимальная latency/load verification для PoC.
-
-**Verification:** проверенная арифметика assumptions и traceability метрик к исходной задаче.
-
-**Checkpoint:** все эксплуатационные требования покрыты решением или явно записанным residual risk.
-
-## Slice 6: Submission hardening
-
-**Status:** `PLANNED`
-
-**Goal:** сделать сдачу воспроизводимой и честно завершить документацию.
-
-**Open questions:** способ финальной container-проверки и порядок выдачи проверяющему доступа к private
-репозиторию.
-
-**Verification:** чистый local/container run, smoke-test, два demo paths, diagram/link check, полный
-`AI_USAGE.md` и финальный `SELF_REVIEW.md`.
-
-**Checkpoint:** сдача готова только после воспроизведения инструкции из README с чистого окружения.
+**Checkpoint:** слайс находится в работе; следующий слайс будет определён только при фактической
+необходимости после завершения или остановки этого scope.

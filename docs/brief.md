@@ -1,5 +1,7 @@
 # Задание и границы решения
 
+Полная исходная формулировка сохранена в [`docs/original-requirements.md`](original-requirements.md).
+
 ## Контекст
 
 - Онлайн-сервис: около 5 млн активных пользователей и 200k тикетов в день.
@@ -16,7 +18,7 @@
 - Текущий CSAT: 4,2/5; reopen rate: 9%.
 - Типовые и повторяющиеся обращения: около 40% потока.
 
-## Обязательные артефакты AI-трека
+## Обязательные артефакты
 
 - `README.md` с запуском, demo, границей PoC/target design, assumptions и краткой бизнес-ценностью.
 - `docs/architecture.md`, `docs/ml.md`, `docs/monitoring.md`, `docs/risks-and-ops.md`.
