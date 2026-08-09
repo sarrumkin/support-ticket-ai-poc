@@ -1,17 +1,17 @@
 # AI Hub Support PoC
 
-System Design проект AI/ML-системы для автоматизации обработки тикетов поддержки крупного
-онлайн-сервиса: классификация и маршрутизация на быстром пути, retrieval и подготовка ответа на
-асинхронном пути, human-in-the-loop для рискованных случаев и полный audit trail решений.
+Минимальный воспроизводимый PoC AI/ML-системы для обработки тикетов поддержки: быстрый risk-aware
+routing, поиск готового ответа, генерация draft, HTTP polling API и audit trail.
 
-## Статус
+## Диаграммы
 
-Slices 1–5 завершены. Slice 4 реализовал offline-first ML tracer, а Slice 5 добавил минимальный
-async HTTP transport с polling и Docker:
-Pydantic/Protocol contracts, Scrubadub, versioned risk rules, scikit-learn intent classifier,
-exact lookup, FastEmbed + in-memory Qdrant, fixture/Groq generation adapters и fail-closed audit flow.
+- [Путь тикета: end-to-end pipeline](docs/ticket-processing-flow.md#end-to-end-pipeline)
+- [Lifecycle тикета и пользовательские статусы](docs/ticket-processing-flow.md#минимальный-lifecycle)
+- [Целевая архитектура: reference implementation](docs/architecture.md#reference-implementation-diagram)
 
-## Demo-сценарии
+## Быстрый старт
+
+Требуется Python 3.13+.
 
 ```bash
 python3 -m venv .venv
@@ -22,44 +22,53 @@ python3 -m venv .venv
 .venv/bin/python -m support_poc.demo generated
 ```
 
-Первые два пути не требуют embedding model. `generated` при первом запуске скачивает примерно 220 MB
-multilingual MiniLM, строит локальный in-memory index и использует deterministic fixture generator.
-Все входы и KB fixtures синтетические.
+Все тикеты и материалы knowledge base синтетические. Сценарии `exact` и `risky` не загружают
+embedding model. При первом запуске `generated` скачивается около 220 MB для multilingual MiniLM;
+ответ создаёт deterministic fixture generator, поэтому API key не нужен.
+
+## Что показывают сценарии
+
+| Сценарий | Результат |
+|---|---|
+| `exact` | Готовый approved answer найден без embeddings и generation |
+| `risky` | Рискованный тикет fail closed передан оператору без непроверенного draft |
+| `generated` | Semantic retrieval и generation создают draft для проверки оператором |
 
 ## HTTP PoC
 
 ```bash
 .venv/bin/uvicorn support_poc.api:app --host 0.0.0.0 --port 8000 --workers 1
-curl -i -X POST http://localhost:8000/tickets -H 'Content-Type: application/json' \
+
+curl -i -X POST http://localhost:8000/tickets \
+  -H 'Content-Type: application/json' \
   -d '{"ticket_id":"demo-1","content":"Где мой заказ?","channel":"web"}'
+
 curl http://localhost:8000/tickets/demo-1
 ```
 
-Контракт удобно смотреть в [docs/api-contract.md](docs/api-contract.md) и интерактивно на
-`http://localhost:8000/docs`. Polling, in-memory state и `BackgroundTasks` — ограничения PoC.
+`POST /tickets` возвращает `202`, обработка продолжается в background task, результат доступен через
+polling. Интерактивная OpenAPI-схема — на `http://localhost:8000/docs`, полный контракт — в
+[docs/api-contract.md](docs/api-contract.md).
+
+Запуск в Docker:
 
 ```bash
 docker build -t support-poc .
 docker run --rm -p 8000:8000 support-poc
 ```
 
-Optional Groq check включается явно и получает только redacted synthetic ticket:
+## Граница решения
 
-```bash
-GROQ_API_KEY=... .venv/bin/python -m support_poc.demo generated --generator groq
-RUN_GROQ_TESTS=1 GROQ_API_KEY=... .venv/bin/python -m pytest -q -m groq
-```
+**Реализовано в PoC:** PII redaction, risk rules, intent classification, exact и semantic retrieval,
+fixture/Groq generation adapters, fail-closed routing, typed audit, CLI, async HTTP polling transport
+и offline tests.
 
-Ключ не хранится в репозитории. Без него offline suite и demo полностью работоспособны.
+**Только target design:** production queues и autoscaling, внешние интеграции, отдельная vector DB,
+MLOps, real-data evaluation и обучение на исторических тикетах.
 
-## Реализация и target design
-
-- **Реализовано в PoC:** exact/risky/generated/failure paths, synthetic fixtures, CLI, typed audit и
-  replaceable adapters.
-- **Останется архитектурным дизайном:** production queues, autoscaling, внешние интеграции, полноценная
-  vector DB service, MLOps, real-data evaluation и обучение на историческом потоке.
-- **Честная граница:** synthetic confidence и similarity thresholds не calibrated; Scrubadub не
-  является полноценным RU PII NER; generated content всегда требует проверки оператора.
+**Ограничения:** confidence и similarity thresholds не calibrated; Scrubadub не заменяет полноценный
+RU PII NER; сгенерированный ответ всегда требует проверки оператора. HTTP state хранится in-memory,
+а `BackgroundTasks` и один worker моделируют transport, но не production queue или delivery.
 
 ## Проверка
 
@@ -70,27 +79,31 @@ python3 scripts/benchmark_hot_path.py --tickets 20000 --warmup 1000 \
   --min-throughput 67 --max-p95-ms 500
 ```
 
-Обязательный pytest suite не использует сеть или API key. Marked semantic check скачивает локальную
-модель; Groq integration запускается отдельно. Benchmark Slice 3 не включает реальные dependencies и
-не подтверждает production latency/replica sizing.
+Основной suite работает без сети и API key. Semantic check отдельно скачивает локальную модель.
+Synthetic benchmark измеряет overhead Python harness, а не production latency внешних сервисов.
 
-## Ценность для бизнеса
+Опциональная проверка Groq получает только redacted synthetic ticket:
 
-Система должна снизить стоимость обработки повторяющихся обращений, доля которых оценивается примерно
-в 40% потока, и ускорить первый ответ без ухудшения безопасности. Быстрая классификация и точная
-маршрутизация уменьшают ручную сортировку и риск нарушения SLA в периоды инцидентов. Черновики ответов
-освобождают время операторов, а human-in-the-loop ограничивает стоимость ошибок модели. Audit trail и
-контроль LLM-затрат делают автоматизацию управляемой, а не бесконтрольной заменой операторов.
+```bash
+GROQ_API_KEY=... .venv/bin/python -m support_poc.demo generated --generator groq
+RUN_GROQ_TESTS=1 GROQ_API_KEY=... .venv/bin/python -m pytest -q -m groq
+```
+
+## Бизнес-ценность
+
+Около 40% обращений считаются верхней оценкой пула повторяющихся кейсов, а не обещанной долей
+автоответов. KB-first path сокращает ручную сортировку и число LLM-вызовов; human-in-the-loop
+ограничивает стоимость ошибок; audit trail делает каждое автоматическое решение проверяемым.
 
 ## Документация
 
-- [Требования и scope AI-трека](docs/brief.md)
-- [Slice map](SLICE_MAP.md)
-- [Архитектура](docs/architecture.md)
+- [Требования и границы](docs/brief.md)
 - [Контракт обработки тикета](docs/ticket-processing-flow.md)
 - [HTTP API contract PoC](docs/api-contract.md)
-- [ML/LLM-подход](docs/ml.md)
+- [Архитектура, capacity и latency](docs/architecture.md)
+- [ML/LLM-подход и качество](docs/ml.md)
 - [Мониторинг](docs/monitoring.md)
-- [Риски и эксплуатация](docs/risks-and-ops.md)
+- [Privacy, safety и эксплуатационные риски](docs/risks-and-ops.md)
 - [Использование AI](AI_USAGE.md)
 - [Self-review](SELF_REVIEW.md)
+- [Карта выполненных слайсов](SLICE_MAP.md)
