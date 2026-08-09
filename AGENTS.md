@@ -19,7 +19,7 @@
 | Надёжность, privacy и safety | [`docs/risks-and-ops.md`](docs/risks-and-ops.md) |
 | Роль AI и журнал совместных решений | [`AI_USAGE.md`](AI_USAGE.md) |
 | Слабые стороны и условия остановки проекта | [`SELF_REVIEW.md`](SELF_REVIEW.md) |
-| Состояние активной работы | [GitHub Project `shtab`](https://github.com/users/sarrumkin/projects/1) |
+| Состояние активной работы | GitHub Issues |
 
 ## Slice workflow
 
