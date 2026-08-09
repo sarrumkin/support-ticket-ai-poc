@@ -11,7 +11,9 @@
 
 ## Slice 1: Repository bootstrap
 
-**Status:** `IN_PROGRESS`
+**Status:** `DONE`
+
+**Issue:** [#1 — Slice 1: Repository bootstrap](https://github.com/sarrumkin/ai-hub-support-poc/issues/1)
 
 **Goal:** создать управляемую структуру репозитория, правила работы, живой журнал решений и связь с
 GitHub Project.
@@ -24,7 +26,7 @@ repository-level Project link и один issue Slice 1.
 **Verification:** проверить файлы и ссылки, Owner Context, Git history, private remote, Project link и
 единственный slice issue.
 
-**Checkpoint:** остановиться после bootstrap; Slice 2 остаётся `PLANNED`.
+**Checkpoint:** bootstrap завершён; Slice 2 остаётся `PLANNED` и не имеет отдельного issue.
 
 ## Slice 2: Thin system design contract
 
