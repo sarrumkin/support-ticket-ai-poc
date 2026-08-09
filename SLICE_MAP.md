@@ -115,7 +115,7 @@ in-memory state, polling и Docker.
 
 **Verification:** offline pytest, API contract tests, Docker build и polling smoke-test.
 
-**Checkpoint:** offline suite прошёл (`16 passed`, два optional checks skipped), compile/diff checks
-clean. Docker image собран; реальный `202` → polling exact path и stdout audit проверены. Ограничения
-one-worker `BackgroundTasks`, in-memory state и отсутствия channel delivery зафиксированы; следующий
+**Checkpoint:** реализация, offline suite (`16 passed`), отдельный local semantic check и Docker
+polling smoke завершены; результаты и evidence boundary записаны в monitoring. Optional Groq network
+check не запускался без локального `GROQ_API_KEY` и не считается подтверждённым evidence; следующий
 слайс не начинается автоматически.
