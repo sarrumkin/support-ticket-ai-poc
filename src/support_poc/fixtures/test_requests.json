@@ -1,0 +1,182 @@
+{
+  "version": "poc-scenarios-v1",
+  "cases": [
+    {
+      "scenario_id": "exact-auto-reply",
+      "description": "Утверждённый exact-ответ возвращается без generation.",
+      "profile": "exact",
+      "ticket": {
+        "ticket_id": "scenario-exact-1",
+        "content": "где мой заказ",
+        "locale": "ru"
+      },
+      "expected": {
+        "outcome": "auto_reply",
+        "route_reason": "approved_exact",
+        "answer_present": true,
+        "audit_absent_stages": ["generation", "draft_validation"],
+        "audit_contains": [
+          {"stage": "resolution", "action": "approved_exact"},
+          {"stage": "routing", "action": "auto_reply"}
+        ]
+      }
+    },
+    {
+      "scenario_id": "semantic-auto-reply",
+      "description": "Надёжный утверждённый semantic match идёт по direct-answer маршруту.",
+      "profile": "semantic",
+      "ticket": {
+        "ticket_id": "scenario-semantic-1",
+        "content": "подскажите, где посмотреть движение заказа",
+        "locale": "ru"
+      },
+      "expected": {
+        "outcome": "auto_reply",
+        "route_reason": "approved_semantic",
+        "answer_present": true,
+        "audit_absent_stages": ["generation", "draft_validation"],
+        "audit_contains": [
+          {"stage": "resolution", "action": "approved_semantic"},
+          {"stage": "routing", "action": "auto_reply"}
+        ]
+      }
+    },
+    {
+      "scenario_id": "generated-operator-review",
+      "description": "Retrieval evidence позволяет подготовить draft для проверки оператором.",
+      "profile": "generated",
+      "ticket": {
+        "ticket_id": "scenario-generated-1",
+        "content": "как изменить имя в профиле",
+        "locale": "ru"
+      },
+      "expected": {
+        "outcome": "operator_review_with_draft",
+        "route_reason": "generated_draft_requires_review",
+        "draft_present": true,
+        "audit_contains": [
+          {"stage": "resolution", "action": "miss"},
+          {"stage": "generation", "action": "drafted"},
+          {"stage": "draft_validation", "action": "passed"},
+          {"stage": "routing", "action": "operator_review_with_draft"}
+        ]
+      }
+    },
+    {
+      "scenario_id": "risky-payment-with-pii",
+      "description": "PII редактируется, а платёжный спор сразу передаётся специалисту.",
+      "profile": "risky",
+      "ticket": {
+        "ticket_id": "scenario-risky-1",
+        "content": "с моей карты списали деньги, мой email test@example.com",
+        "locale": "ru"
+      },
+      "expected": {
+        "outcome": "human_review_without_draft",
+        "route_reason": "risky_ticket",
+        "redacted_absent": ["test@example.com"],
+        "audit_absent_stages": ["intent", "resolution", "generation"],
+        "audit_contains": [
+          {"stage": "pii", "action": "redacted"},
+          {"stage": "risk", "action": "human_review", "reason_code": "payment_dispute"},
+          {"stage": "routing", "action": "human_review_without_draft", "reason_code": "risky_ticket"}
+        ]
+      }
+    },
+    {
+      "scenario_id": "uncertain-pii-fail-closed",
+      "description": "Residual PII uncertainty останавливает внешний processing до классификации.",
+      "profile": "pii_uncertain",
+      "ticket": {
+        "ticket_id": "scenario-pii-1",
+        "content": "в сообщении есть нераспознанные персональные данные",
+        "locale": "ru"
+      },
+      "expected": {
+        "outcome": "human_review_without_draft",
+        "route_reason": "pii_uncertain",
+        "audit_absent_stages": ["risk", "intent", "resolution", "generation"],
+        "audit_contains": [
+          {"stage": "pii", "action": "redacted", "reason_code": "scenario_uncertain_pii"},
+          {"stage": "routing", "action": "human_review_without_draft", "reason_code": "pii_uncertain"}
+        ]
+      }
+    },
+    {
+      "scenario_id": "low-confidence-abstention",
+      "description": "Низкая intent confidence приводит к abstention и human review.",
+      "profile": "low_confidence",
+      "ticket": {
+        "ticket_id": "scenario-confidence-1",
+        "content": "непонятный вопрос без достаточного контекста",
+        "locale": "ru"
+      },
+      "expected": {
+        "outcome": "human_review_without_draft",
+        "route_reason": "low_confidence",
+        "audit_absent_stages": ["resolution", "generation"],
+        "audit_contains": [
+          {"stage": "intent", "action": "abstained"},
+          {"stage": "routing", "action": "human_review_without_draft", "reason_code": "low_confidence"}
+        ]
+      }
+    },
+    {
+      "scenario_id": "retrieval-miss-fail-closed",
+      "description": "Отсутствие approved answer и evidence даёт retrieval fallback без draft.",
+      "profile": "retrieval_miss",
+      "ticket": {
+        "ticket_id": "scenario-retrieval-1",
+        "content": "нужна информация, которой нет в базе знаний",
+        "locale": "ru"
+      },
+      "expected": {
+        "outcome": "human_review_without_draft",
+        "route_reason": "retrieval_miss",
+        "audit_absent_stages": ["generation"],
+        "audit_contains": [
+          {"stage": "resolution", "action": "miss"},
+          {"stage": "routing", "action": "human_review_without_draft", "reason_code": "retrieval_miss"}
+        ]
+      }
+    },
+    {
+      "scenario_id": "provider-unavailable-fail-closed",
+      "description": "Недоступность generation provider маршрутизирует тикет без draft.",
+      "profile": "provider_unavailable",
+      "ticket": {
+        "ticket_id": "scenario-provider-1",
+        "content": "изменить данные профиля по инструкции из базы",
+        "locale": "ru"
+      },
+      "expected": {
+        "outcome": "human_review_without_draft",
+        "route_reason": "provider_unavailable",
+        "audit_absent_stages": ["draft_validation"],
+        "audit_contains": [
+          {"stage": "generation", "action": "failed", "reason_code": "provider_unavailable"},
+          {"stage": "routing", "action": "human_review_without_draft", "reason_code": "provider_unavailable"}
+        ]
+      }
+    },
+    {
+      "scenario_id": "unsafe-draft-fail-closed",
+      "description": "Draft с неизвестной evidence-ссылкой не проходит validation и отбрасывается.",
+      "profile": "safety_failed",
+      "ticket": {
+        "ticket_id": "scenario-safety-1",
+        "content": "подготовьте ответ по найденной статье",
+        "locale": "ru"
+      },
+      "expected": {
+        "outcome": "human_review_without_draft",
+        "route_reason": "safety_failed",
+        "audit_contains": [
+          {"stage": "generation", "action": "drafted"},
+          {"stage": "draft_validation", "action": "failed", "reason_code": "safety_failed"},
+          {"stage": "routing", "action": "human_review_without_draft", "reason_code": "safety_failed"}
+        ]
+      }
+    }
+  ]
+}

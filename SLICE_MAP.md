@@ -119,3 +119,35 @@ in-memory state, polling и Docker.
 local semantic и external Groq checks. Synthetic Groq probe вернул grounded operator-review draft за
 `6.081s`; результаты и evidence boundary записаны в monitoring. Следующий слайс не начинается
 автоматически.
+
+### Sub-slice 5.1: Synthetic test request generation
+
+**Status:** `DONE`
+
+**Issue:** [#6 — Sub-slice 5.1: Synthetic test request generation](https://github.com/sarrumkin/ai-hub-support-poc/issues/6)
+
+**Dependency:** использует стабильные `TicketInput`, `ProcessingResult` и `TicketProcessor` из Slice 4.
+Scope не зависит от FastAPI/Docker-реализации Slice 5 и не меняет ML или HTTP contracts, поэтому
+может выполняться параллельно с родительским слайсом.
+
+**Goal:** создать воспроизводимый набор синтетических тестовых запросов с ожидаемыми исходами по
+текущим processing, ML и safety contracts для сквозной проверки PoC.
+
+**Included:** versioned deterministic catalog/generator русскоязычных запросов; реализованные
+`auto_reply`, `operator_review_with_draft`, `human_review_without_draft`; разные воспроизводимые
+offline route reasons; ожидаемые outcome, route reason и audit-инварианты; инструкция запуска.
+
+**Not included:** реальные данные, production evaluation dataset, утверждения о ML quality,
+load/fuzz/adversarial testing, внешний LLM и изменения adapters, thresholds или routing policy.
+
+**Verification:** deterministic offline tests проверяют схему и уникальность cases, покрытие всех
+заявленных outcomes, совпадение фактических `outcome`/`route_reason` с ожиданиями и обязательные audit
+records; полный обязательный pytest suite запускается без API key.
+
+**Checkpoint:** versioned catalog `poc-scenarios-v1` содержит 9 synthetic cases и покрывает три
+реализованных outcomes, direct-answer, draft и fail-closed reasons. Focused suite прошёл (`11
+passed`), полный offline suite прошёл (`23 passed`, два explicit optional checks skipped), CLI
+сгенерировал и верифицировал 9 JSONL requests без сети и API key. Control adapters проверяют
+orchestration/audit contracts, но не ML quality или semantic relevance; расширение в
+load/evaluation/red-team scope требует отдельного checkpoint. Команды, покрытие и evidence boundary
+дополнительно зафиксированы в `docs/monitoring.md`.

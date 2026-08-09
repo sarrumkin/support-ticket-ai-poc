@@ -22,6 +22,7 @@ dev = ["httpx>=0.27,<1", "pytest>=9,<10"]
 
 [project.scripts]
 support-poc-demo = "support_poc.demo:main"
+support-poc-scenarios = "support_poc.scenarios:main"
 
 [tool.setuptools.package-data]
 support_poc = ["fixtures/*.json"]

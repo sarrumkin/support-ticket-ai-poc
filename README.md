@@ -57,6 +57,24 @@ docker build -t support-poc .
 docker run --rm -p 8000:8000 support-poc
 ```
 
+## Синтетические тестовые запросы
+
+Versioned catalog `poc-scenarios-v1` покрывает три реализованных outcome и отдельные причины
+fail-closed маршрутизации. Команда `generate` печатает JSONL: каждая строка содержит HTTP-ready
+`request` и ожидаемый contract. Команда `verify` выполняет все cases через текущий `TicketProcessor`:
+
+```bash
+.venv/bin/python -m support_poc.scenarios generate
+.venv/bin/python -m support_poc.scenarios generate --scenario risky-payment-with-pii
+.venv/bin/python -m support_poc.scenarios verify
+```
+
+Offline verifier использует deterministic control adapters для exact/semantic/dependency outcomes,
+поэтому не скачивает embedding model и не обращается к сети. Он проверяет orchestration, route и
+audit contracts, включая обязательное отсутствие downstream stages после fail-closed решения, но не
+измеряет качество intent classification или semantic retrieval. Для реального локального FastEmbed
+path остаётся отдельный marked test.
+
 ## Граница решения
 
 **Реализовано в PoC:** PII redaction, risk rules, intent classification, exact и semantic retrieval,

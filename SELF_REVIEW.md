@@ -7,7 +7,9 @@
 
 PoC доказывает end-to-end flow, fail-closed routing и заменяемость adapters, но использует synthetic
 данные и demo thresholds. Самая слабая часть — отсутствие offline evaluation на представительной
-разметке: текущие tests проверяют contracts и ветвление, а не качество ML.
+разметке: scenario catalog расширяет покрытие outcomes и audit-инвариантов, но его control adapters
+детерминированно задают dependency results. Эти tests проверяют contracts и ветвление, а не качество
+ML или semantic relevance.
 
 ## Сделанные assumptions
 

@@ -116,6 +116,29 @@ Image `ai-hub-support-poc:slice5` успешно собран и запущен 
 - Два dependency warnings не сломали suite, но TestClient migration и FastEmbed recalibration должны
   быть закрыты перед обновлением runtime dependencies.
 
+## Synthetic scenario contract test — Sub-slice 5.1
+
+Versioned catalog `poc-scenarios-v1` содержит 9 синтетических RU-запросов для трёх реализованных
+outcomes: `auto_reply`, `operator_review_with_draft` и `human_review_without_draft`. Он отдельно
+проверяет exact/semantic direct answer, generated draft, risky/PII gates, low-confidence abstention,
+retrieval miss, provider outage и safety validation failure.
+
+```bash
+.venv/bin/python -m support_poc.scenarios generate
+.venv/bin/python -m support_poc.scenarios verify
+.venv/bin/python -m pytest -q tests/test_scenarios.py
+```
+
+`generate` печатает 9 JSONL records с HTTP-ready `request` и ожидаемым contract. `verify` пропускает
+каждый request через текущий `TicketProcessor` и сверяет `outcome`, `route_reason`, наличие
+answer/draft, PII redaction, обязательные audit records и отсутствие downstream stages после
+fail-closed решения.
+
+Control adapters детерминированно задают результаты classifier/resolver/provider, поэтому test
+работает без сети, API key и загрузки embedding model. Это contract/orchestration evidence: он
+проверяет наблюдаемость route и полноту audit trail, но не доказывает intent quality, semantic
+relevance, calibrated thresholds, production latency или бизнес-эффект.
+
 ## Критерий готовности
 
 Для каждой критичной деградации должен существовать наблюдаемый сигнал, владелец реакции и безопасное
