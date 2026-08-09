@@ -5,14 +5,21 @@
 ## Highload и надёжность
 
 - Разделить sync classification/routing и async retrieval/generation.
-- Поглощать bursts очередью и backpressure, не масштабировать LLM-вызовы пропорционально дубликатам.
+- Проектировать sync path на стартовый target `66.7 ticket/s` (`2x` observed peak), `p95 <= 500 ms`
+  и минимум 34 in-flight операции; replica sizing отложить до реальных измерений dependencies.
+- Поглощать bursts durable outbox/очередью и backpressure, не масштабировать LLM-вызовы
+  пропорционально дубликатам.
 - При LLM outage сохранять приём тикета, deterministic routing и human fallback.
 - Не допускать нарушения hot-path latency медленными зависимостями.
+- State transition, audit и outbox event создавать атомарно; status/reply events обрабатывать
+  `at-least-once` со стабильным `event_id` и delivery ledger. Для provider без idempotency support
+  сохраняется наблюдаемый residual duplicate risk.
 
 ## Privacy, safety и risk
 
 - Не отправлять сырой PII во внешний LLM; redaction и policy enforcement выполняются до такого вызова.
-- Risky, чувствительные и low-confidence категории требуют human-in-the-loop.
+- Успешно redacted PII сам по себе не запрещает safe automation; sensitive/unredactable PII, risky и
+  low-confidence категории требуют human-in-the-loop.
 - Разделять controls по происхождению ответа: `RoutingPolicy` выполняется до resolution; exact lookup
   возвращает только eligible approved answer; semantic lookup ищет в таком же candidate set и
   дополнительно проверяет match confidence; `GeneratedResponsePolicy` применяется только к
@@ -24,6 +31,8 @@
 - Knowledge/retrieved content и пользовательский текст считать недоверенными относительно prompt
   injection.
 - Audit record должен объяснять принятое действие и версии участвовавших policy/model/knowledge.
+- Lookup miss нельзя смешивать с KB/semantic outage: недоступность dependency fail closed ведёт в
+  human review. `answered` фиксируется только после delivery confirmation.
 
 ## Production blockers
 
@@ -42,6 +51,13 @@
 - Deduplication key и incident-mode policy.
 - Retention/access policy audit storage.
 - Circuit breakers, retry budgets и cost caps.
+- Retention и reconciliation policy delivery ledger.
+
+## Ограничение performance evidence
+
+Slice 3 содержит только CPU-only synthetic benchmark deterministic adapters. Он проверяет harness,
+percentiles и thresholds, но не включает сеть, PostgreSQL, broker, providers или реальные ML/LLM и
+не подтверждает production replica count.
 
 ## Критерий готовности
 

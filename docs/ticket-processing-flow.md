@@ -68,7 +68,7 @@ eligibility exact-ответа является частью lookup, а semantic
 - `operator_review_with_draft`;
 - `human_review_without_draft`.
 
-## Пользовательские статусы и lifecycle
+## Пользовательские статусы
 
 - `processing_automatically`: «Запрос принят. Подбираем решение»;
 - `waiting_for_specialist`: «Чтобы дать точный ответ, мы передали обращение специалисту»;
@@ -78,15 +78,54 @@ eligibility exact-ответа является частью lookup, а semantic
 - `answered`: содержательный ответ доставлен пользователю.
 
 `reviewing_with_specialist` используется только для пригодного draft. `escalated_to_specialist`
-отправляется только после фактической смены route из-за conflict/failure, когда пригодного draft нет,
-а не при отдельном retry. Status events доставляются идемпотентно не более одного раза на один переход
-состояния.
+создаётся только после фактической смены route из-за conflict/failure, когда пригодного draft нет, а
+не при отдельном retry.
 
-Lifecycle после auto-reply намеренно не показан на Mermaid: тикет переходит в `pending_customer`,
-ответ пользователя в течение 24 часов возвращает его в routing, а отсутствие ответа разрешает
-auto-close через 24 часа.
+Hot path фиксирует route, новое внутреннее состояние, audit record и status event, но не ждёт
+channel-provider delivery. Для chat/web тот же результат можно вернуть как синхронный acknowledgement;
+для email/mobile доставка status выполняется асинхронно. Поэтому `<= 500 ms` относится к техническому
+acknowledgement и routing decision, а не к наблюдаемой пользователем доставке через любой канал.
+
+Status/reply events обрабатываются `at-least-once`; стабильный `event_id` позволяет consumer подавлять
+повторный side effect. Причина выбора и ограничения внешнего provider подробно описаны в разделе
+«Надёжность доставки событий» [`docs/architecture.md`](architecture.md).
+
+## Минимальный lifecycle
+
+Internal state отделён от пользовательского status. `answered` означает подтверждённую доставку
+содержательного ответа и переводит внутреннее состояние в `pending_customer`, а не является
+синонимом попытки отправки.
+
+```mermaid
+stateDiagram-v2
+    [*] --> accepted
+    accepted --> resolving_automatically: automatic_resolution_candidate / processing_automatically
+    accepted --> waiting_for_specialist: human_review_required / waiting_for_specialist
+
+    resolving_automatically --> delivery_pending: approved или generated auto-reply
+    resolving_automatically --> reviewing_with_specialist: пригодный draft / reviewing_with_specialist
+    resolving_automatically --> waiting_for_specialist: conflict или failure / escalated_to_specialist
+
+    reviewing_with_specialist --> delivery_pending: оператор подтвердил ответ
+    waiting_for_specialist --> delivery_pending: оператор подготовил ответ
+    delivery_pending --> delivery_pending: retry с тем же event_id
+    delivery_pending --> pending_customer: delivery confirmed / answered
+
+    pending_customer --> accepted: customer reply / processing_cycle + 1
+    pending_customer --> closed: configurable 24h timeout
+    closed --> [*]
+```
+
+Таймаут 24 часа — явная product assumption, а не исходное требование. Будущий PoC моделирует оба
+перехода из `pending_customer` через simulated clock или явную команду `advance`, без фонового
+scheduler.
 
 ## End-to-end pipeline
+
+Диаграмма показывает product-level decision flow и намеренно не раскрывает transport, persistence,
+outbox, retry или worker topology. Узлы пользовательских статусов означают выбранный status outcome,
+а не синхронный вызов внешнего channel provider. Reference implementation вынесена в отдельную
+диаграмму [`docs/architecture.md`](architecture.md#reference-implementation-diagram).
 
 ```mermaid
 flowchart TD
@@ -144,13 +183,16 @@ flowchart TD
 
 ## Инварианты и fallback
 
-- Risky, PII-sensitive и low-confidence тикет не входит в `LayeredAnswerResolver`.
+- Сам факт обнаружения PII не запрещает automation: после успешной redaction safe-категория может
+  продолжить flow. Sensitive или unredactable PII, risky intent и low confidence не входят в
+  `LayeredAnswerResolver`.
 - Exact lookup возвращает только active, актуальный и `auto_reply_eligible` content; остальные
   результаты считаются miss.
 - Semantic lookup ищет в том же eligible candidate set и не отправляет match ниже подтверждённого
   confidence threshold.
-- LLM/retrieval outage не блокирует приём тикета и human fallback.
+- Lookup miss отличается от dependency outage. KB/semantic/LLM outage не блокирует приём тикета и
+  fail closed переводит его в human fallback; недоступность не трактуется как обычный miss.
 - Incident mode предпочитает versioned approved incident response/cache и не создаёт LLM-вызов на
   каждый дубликат.
-- Каждый route, lookup/match, generated policy action, content/model version и итоговое действие
-  оставляют audit record.
+- Каждый route, lookup/match, generated policy action, content/model version, delivery intent и
+  подтверждённое итоговое действие оставляют audit record.

@@ -6,10 +6,10 @@ System Design проект AI/ML-системы для автоматизаци�
 
 ## Статус
 
-**Slice 1 — Repository bootstrap** завершён. **Slice 2 — Ticket processing flow** находится в работе:
-уточняются sync/async pipeline, outcomes, пользовательские статусы и fallback paths. PoC ещё не
-реализован; следующий слайс будет определён по фактической необходимости после отдельного checkpoint.
-Такой статус указан явно, чтобы не выдавать архитектурный замысел за работающий код.
+**Slice 1 — Repository bootstrap**, **Slice 2 — Ticket processing flow** и **Slice 3 — Architecture,
+capacity and latency** завершены. Product-level ticket flow отделён от reference implementation
+diagram; также зафиксированы lifecycle, delivery semantics и sizing под incident burst. Основной PoC
+ещё не реализован; следующий слайс будет определён только после отдельного checkpoint.
 
 ## Планируемый demo-сценарий
 
@@ -28,6 +28,21 @@ System Design проект AI/ML-системы для автоматизаци�
   vector DB, MLOps и обучение моделей на историческом потоке.
 - **Открытое решение:** конкретный ML/LLM baseline выбирается в отдельном слайсе; в bootstrap он не
   фиксируется преждевременно.
+
+## Проверка Slice 3
+
+Пока основной PoC не реализован, доступен только synthetic CPU benchmark deterministic hot-path
+adapters:
+
+```bash
+python3 -m unittest discover -s tests -v
+python3 scripts/benchmark_hot_path.py --tickets 20000 --warmup 1000 \
+  --min-throughput 67 --max-p95-ms 500
+```
+
+Benchmark не поднимает PostgreSQL, broker, внешние providers или модели и не подтверждает
+production latency/replica sizing. Его назначение — воспроизводимо проверить арифметику thresholds,
+JSON report и локальный orchestration overhead.
 
 ## Ценность для бизнеса
 

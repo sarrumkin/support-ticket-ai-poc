@@ -32,7 +32,7 @@ repository-level Project link и один issue Slice 1.
 
 ## Slice 2: Ticket processing flow
 
-**Status:** `IN_PROGRESS`
+**Status:** `DONE`
 
 **Issue:** [#2 — Slice 2: Ticket processing flow](https://github.com/sarrumkin/ai-hub-support-poc/issues/2)
 
@@ -48,5 +48,28 @@ baseline и production infrastructure.
 **Verification:** непротиворечивый Mermaid flow, явные policy boundaries, корректные пользовательские
 статусы, fallback для каждого отказа и согласованность связанных документов.
 
-**Checkpoint:** слайс находится в работе; следующий слайс будет определён только при фактической
-необходимости после завершения или остановки этого scope.
+**Checkpoint:** processing contract прошёл review. Неоднозначности lifecycle, delivery semantics,
+audit ordering и outage branches вынесены в явно согласованный Slice 3, а не скрыты как завершённые
+production-решения.
+
+## Slice 3: Architecture, capacity and latency
+
+**Status:** `DONE`
+
+**Issue:** [#3 — Slice 3: Architecture, capacity and latency](https://github.com/sarrumkin/ai-hub-support-poc/issues/3)
+
+**Goal:** доработать target architecture на основе processing contract, определить lifecycle и
+delivery semantics, рассчитать capacity/latency и получить честный локальный microbenchmark.
+
+**Included:** отдельная lifecycle-диаграмма, input/routing/state/audit contracts, component boundaries,
+надёжность доставки событий, capacity model, latency budget и synthetic hot-path microbenchmark.
+
+**Not included:** production deployment, реальные ML/LLM, внешняя очередь или vector DB, а также
+реализация risky/happy tracer paths.
+
+**Verification:** Mermaid-диаграммы, consistency contracts, failure scenarios, capacity arithmetic и
+stdlib benchmark с сохранёнными командами и результатами.
+
+**Checkpoint:** product-level processing diagram возвращена к исходному простому flow; workers,
+outbox и provider delivery оставлены только в отдельной reference implementation diagram. Обе схемы
+прошли Mermaid rendering; следующий слайс не определяется автоматически.

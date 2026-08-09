@@ -1,6 +1,6 @@
 # ML/LLM design
 
-**Статус:** skeleton; выбор PoC baseline намеренно открыт до Slice 2.
+**Статус:** skeleton; выбор PoC baseline остаётся открытым и не входит в architecture/capacity Slice 3.
 
 ## Задачи, которые нужно разделить
 
