@@ -6,7 +6,8 @@ System Design проект AI/ML-системы для автоматизаци�
 
 ## Статус
 
-Slices 1–4 завершены. В **Slice 4 — Minimal PoC ML baseline** реализован offline-first tracer:
+Slices 1–5 завершены. Slice 4 реализовал offline-first ML tracer, а Slice 5 добавил минимальный
+async HTTP transport с polling и Docker:
 Pydantic/Protocol contracts, Scrubadub, versioned risk rules, scikit-learn intent classifier,
 exact lookup, FastEmbed + in-memory Qdrant, fixture/Groq generation adapters и fail-closed audit flow.
 
@@ -24,6 +25,23 @@ python3 -m venv .venv
 Первые два пути не требуют embedding model. `generated` при первом запуске скачивает примерно 220 MB
 multilingual MiniLM, строит локальный in-memory index и использует deterministic fixture generator.
 Все входы и KB fixtures синтетические.
+
+## HTTP PoC
+
+```bash
+.venv/bin/uvicorn support_poc.api:app --host 0.0.0.0 --port 8000 --workers 1
+curl -i -X POST http://localhost:8000/tickets -H 'Content-Type: application/json' \
+  -d '{"ticket_id":"demo-1","content":"Где мой заказ?","channel":"web"}'
+curl http://localhost:8000/tickets/demo-1
+```
+
+Контракт удобно смотреть в [docs/api-contract.md](docs/api-contract.md) и интерактивно на
+`http://localhost:8000/docs`. Polling, in-memory state и `BackgroundTasks` — ограничения PoC.
+
+```bash
+docker build -t support-poc .
+docker run --rm -p 8000:8000 support-poc
+```
 
 Optional Groq check включается явно и получает только redacted synthetic ticket:
 
@@ -70,6 +88,7 @@ python3 scripts/benchmark_hot_path.py --tickets 20000 --warmup 1000 \
 - [Slice map](SLICE_MAP.md)
 - [Архитектура](docs/architecture.md)
 - [Контракт обработки тикета](docs/ticket-processing-flow.md)
+- [HTTP API contract PoC](docs/api-contract.md)
 - [ML/LLM-подход](docs/ml.md)
 - [Мониторинг](docs/monitoring.md)
 - [Риски и эксплуатация](docs/risks-and-ops.md)

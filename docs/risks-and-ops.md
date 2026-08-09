@@ -23,6 +23,7 @@
 | Provider/model instability | Qwen model отмечен preview, нет retry/circuit breaker/cost cap | Проверка availability/SLA, bounded retries, circuit breaker, budget и fallback model |
 | Invalid/unsupported draft | JSON/evidence allowlist не доказывают factuality | Provenance/factuality evaluation, operator feedback loop, prompt-injection tests |
 | In-memory state | Qdrant index и dedup key не persistent и не shared | External vector store, Redis/DB, backups, HA и consistency policy |
+| Async HTTP demo | `BackgroundTasks`, polling и ticket state работают только в одном процессе; restart теряет jobs | Durable state/outbox, broker, workers и channel-specific delivery |
 | Auto-reply quality | Exact/semantic decision реализован, но production error budget отсутствует | Pilot с approved candidate set, CSAT/reopen/safety guardrails и rollback switch |
 
 ## Надёжность и target design

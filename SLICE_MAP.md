@@ -98,3 +98,24 @@ check, проверка заменяемости adapters и согласова�
 FastEmbed/Qdrant semantic check прошёл отдельно, CLI подтвердил exact/risky/generated outcomes.
 Groq network check не запускался без API key и не входит в обязательный suite. Contracts и adapters
 заменяемы, shortcuts/alternatives/Prod blockers записаны; следующий слайс не начинается автоматически.
+
+## Slice 5: Async FastAPI PoC
+
+**Status:** `DONE`
+
+**Issue:** [#5 — Slice 5: Async FastAPI PoC](https://github.com/sarrumkin/ai-hub-support-poc/issues/5)
+
+**Goal:** обернуть ML pipeline в минимальный HTTP PoC с быстрым `202`, background processing,
+in-memory state, polling и Docker.
+
+**Included:** FastAPI contracts, typed status history, `BackgroundTasks`, tests, readable API contract
+и Docker packaging.
+
+**Not included:** durable queue/database, SSE/WebSocket, реальные channel providers и production SLA.
+
+**Verification:** offline pytest, API contract tests, Docker build и polling smoke-test.
+
+**Checkpoint:** offline suite прошёл (`16 passed`, два optional checks skipped), compile/diff checks
+clean. Docker image собран; реальный `202` → polling exact path и stdout audit проверены. Ограничения
+one-worker `BackgroundTasks`, in-memory state и отсутствия channel delivery зафиксированы; следующий
+слайс не начинается автоматически.
