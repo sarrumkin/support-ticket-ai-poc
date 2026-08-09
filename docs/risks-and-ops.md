@@ -1,65 +1,53 @@
 # Risks and operations
 
-**Статус:** skeleton; итоговый файл останется коротким — по 3–4 ключевых решения на направление.
+## Реализованные PoC controls
 
-## Highload и надёжность
+- До generation выполняются normalization, PII redaction, risk rules и confidence abstention.
+- Risky, residual-PII и low-confidence tickets fail closed в `human_review_without_draft`.
+- External generator получает только redacted synthetic text и allowlisted retrieved evidence.
+- Generated evidence refs проверяются как subset входного evidence; draft повторно сканируется на PII.
+- Каждый вызванный adapter оставляет `ComponentRef` и route reason в audit.
+- Provider/contract/validation failure не возвращает draft и не блокирует приём тикета.
+- Generated draft никогда не auto-send; PoC вообще не выполняет user-visible delivery.
 
-- Разделить sync classification/routing и async retrieval/generation.
-- Проектировать sync path на стартовый target `66.7 ticket/s` (`2x` observed peak), `p95 <= 500 ms`
-  и минимум 34 in-flight операции; replica sizing отложить до реальных измерений dependencies.
-- Поглощать bursts durable outbox/очередью и backpressure, не масштабировать LLM-вызовы
-  пропорционально дубликатам.
-- При LLM outage сохранять приём тикета, deterministic routing и human fallback.
-- Не допускать нарушения hot-path latency медленными зависимостями.
-- State transition, audit и outbox event создавать атомарно; status/reply events обрабатывать
-  `at-least-once` со стабильным `event_id` и delivery ledger. Для provider без idempotency support
-  сохраняется наблюдаемый residual duplicate risk.
+## Известные упрощения и Prod blockers
 
-## Privacy, safety и risk
+| Риск | Текущее ограничение | Необходимое Prod-действие |
+|---|---|---|
+| RU PII leakage | Scrubadub не обещает распознавание русских имён, адресов и контекстных идентификаторов | Presidio/custom RU NER, adversarial evaluation, retention/access policy |
+| Intent error | Synthetic examples и demo threshold `0.45`, confidence не calibrated | Размеченные реальные данные, temporal split, per-intent calibration/abstention |
+| Risk miss | Небольшой keyword denylist, без taxonomy/evaluation | Утвердить taxonomy и cost matrix, добавить classifier/validators и human QA |
+| Semantic false match | Threshold `0.82` не калиброван; FastEmbed pooling behavior зависит от версии | Зафиксировать model artifact, собрать relevance set, оценить Recall@K/precision и reranker |
+| Stale/conflicting KB | JSON загружается при старте, нет lifecycle и редакторских статусов | Versioned KB store, owner/expiry, conflict checks и rollout/rollback |
+| External provider privacy | Groq SaaS разрешён только для synthetic redacted PoC; policy/retention не проверены для реальных данных | DPA/privacy review либо self-hosted Qwen; network egress allowlist и audit |
+| Provider/model instability | Qwen model отмечен preview, нет retry/circuit breaker/cost cap | Проверка availability/SLA, bounded retries, circuit breaker, budget и fallback model |
+| Invalid/unsupported draft | JSON/evidence allowlist не доказывают factuality | Provenance/factuality evaluation, operator feedback loop, prompt-injection tests |
+| In-memory state | Qdrant index и dedup key не persistent и не shared | External vector store, Redis/DB, backups, HA и consistency policy |
+| Auto-reply quality | Exact/semantic decision реализован, но production error budget отсутствует | Pilot с approved candidate set, CSAT/reopen/safety guardrails и rollback switch |
 
-- Не отправлять сырой PII во внешний LLM; redaction и policy enforcement выполняются до такого вызова.
-- Успешно redacted PII сам по себе не запрещает safe automation; sensitive/unredactable PII, risky и
-  low-confidence категории требуют human-in-the-loop.
-- Разделять controls по происхождению ответа: `RoutingPolicy` выполняется до resolution; exact lookup
-  возвращает только eligible approved answer; semantic lookup ищет в таком же candidate set и
-  дополнительно проверяет match confidence; `GeneratedResponsePolicy` применяется только к
-  generated content. Сам факт успешной generation не разрешает немедленный auto-reply, а при отказе
-  policy оператор получает пригодный draft и evidence для проверки.
-- Stale или low-confidence KB match переводить в generation; конфликтующие active approved answers —
-  в human review без draft. Incident mode должен использовать versioned approved response/cache и не
-  вызывать LLM для каждого дубликата.
-- Knowledge/retrieved content и пользовательский текст считать недоверенными относительно prompt
-  injection.
-- Audit record должен объяснять принятое действие и версии участвовавших policy/model/knowledge.
-- Lookup miss нельзя смешивать с KB/semantic outage: недоступность dependency fail closed ведёт в
-  human review. `answered` фиксируется только после delivery confirmation.
+## Надёжность и target design
 
-## Production blockers
+- Sync classification/routing проектируется на `p95 <= 500 ms` и target `66.7 ticket/s` (`2x`
+  observed peak). Реальный ML path этим слайсом под load не проверялся.
+- Retrieval/generation остаются async target path. При LLM outage сохраняются deterministic routing и
+  human fallback; generation retries не должны задерживать acknowledgement.
+- Target implementation создаёт state transition, audit и outbox атомарно. Events обрабатываются
+  `at-least-once` со стабильным `event_id`, delivery ledger и provider idempotency key, где доступен.
+- Lookup miss нельзя смешивать с dependency outage. В PoC adapter failures типизированы, но circuit
+  breaker, retry budget и dependency health остаются target design.
+- Knowledge и пользовательский текст считаются недоверенными относительно prompt injection.
+  Provider prompt отдельно говорит, что evidence — данные, а не инструкции; полноценной защиты это не
+  доказывает.
 
-- Нет подтверждённого per-intent confidence threshold и допустимого error rate для auto-reply.
-  Threshold должен быть откалиброван на размеченной validation set, а приемлемый error rate — утверждён
-  по данным пилота. До этого `GeneratedResponsePolicy` должна fail closed в
-  `operator_review_with_draft`, даже если generation и остальные проверки завершились успешно.
-- Нет подтверждённого semantic-match threshold для прямой отправки approved answer. До калибровки
-  semantic result не должен автоматически отправляться только на основании similarity score и
-  переводится в generation path.
+## Operational stop conditions
 
-## Открытые решения
+До работы с реальными ticket data запрещены внешний LLM и auto-send, пока не утверждены data policy,
+quality thresholds и rollback. Pilot нужно остановить или сузить, если растут safety incidents,
+PII leakage, reopen/SLA breach или operator correction rate относительно контроля. Конкретные пороги
+должны быть определены на pilot data, а не выбраны из PoC fixtures.
 
-- Конкретные категории запрета автозакрытия.
-- Допустимый error rate auto-reply и per-intent calibration thresholds.
-- Deduplication key и incident-mode policy.
-- Retention/access policy audit storage.
-- Circuit breakers, retry budgets и cost caps.
-- Retention и reconciliation policy delivery ledger.
+## Ограничение evidence
 
-## Ограничение performance evidence
-
-Slice 3 содержит только CPU-only synthetic benchmark deterministic adapters. Он проверяет harness,
-percentiles и thresholds, но не включает сеть, PostgreSQL, broker, providers или реальные ML/LLM и
-не подтверждает production replica count.
-
-## Критерий готовности
-
-Риски должны быть связаны с конкретными preventive/detective controls и fallback, а не перечислены
-как общие опасения.
+Slice 3 benchmark измеряет только deterministic orchestration ceiling. Slice 4 smoke tests доказывают
+ветвление, fail-closed behavior и совместимость локального semantic stack. Ни один результат не
+подтверждает production throughput, replica count или ML quality.

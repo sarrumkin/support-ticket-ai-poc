@@ -1,0 +1,41 @@
+{
+  "version": "poc-v1",
+  "entries": [
+  {
+    "evidence_id": "kb-order-status",
+    "locale": "ru",
+    "content": "Статус заказа доступен в разделе «Мои заказы». После передачи заказа службе доставки там появляется ссылка на отслеживание.",
+    "approved_answer": "Откройте раздел «Мои заказы»: там указан актуальный статус и, после передачи заказа в доставку, ссылка на отслеживание.",
+    "source_ref": "synthetic-kb://orders/status",
+    "exact_queries": ["где мой заказ", "хочу узнать статус заказа"],
+    "auto_reply_eligible": true
+  },
+  {
+    "evidence_id": "kb-password-reset",
+    "locale": "ru",
+    "content": "Для восстановления доступа выберите «Забыли пароль» на экране входа. Ссылка для сброса действует 30 минут.",
+    "approved_answer": "На экране входа выберите «Забыли пароль» и следуйте ссылке из письма. Ссылка действует 30 минут.",
+    "source_ref": "synthetic-kb://account/password-reset",
+    "exact_queries": ["забыл пароль"],
+    "auto_reply_eligible": true
+  },
+  {
+    "evidence_id": "kb-profile-name",
+    "locale": "ru",
+    "content": "Имя можно изменить в настройках профиля. Изменение данных, влияющих на документы или платежи, должен проверить оператор.",
+    "approved_answer": null,
+    "source_ref": "synthetic-kb://profile/name",
+    "exact_queries": [],
+    "auto_reply_eligible": false
+  },
+  {
+    "evidence_id": "kb-delivery-problem",
+    "locale": "ru",
+    "content": "Если срок доставки прошёл, оператор проверяет статус у службы доставки и сообщает новый срок.",
+    "approved_answer": null,
+    "source_ref": "synthetic-kb://delivery/problem",
+    "exact_queries": [],
+    "auto_reply_eligible": false
+  }
+  ]
+}

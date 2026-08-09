@@ -36,6 +36,14 @@
 - Какие метрики доказывают решение исходной задачи, а не только исправность сервисов.
 - Как измерять residual duplicate risk для providers без idempotency key/reconciliation API.
 
+## Минимальные сигналы Slice 4
+
+PoC пока не экспортирует metrics backend, но его typed audit позволяет посчитать `route_reason`,
+exact/semantic/generated split, abstention, risk/PII blocks, provider/validation failures и версии
+фактически вызванных components. Для pilot обязательны также operator correction outcome и связь
+`prediction → evidence → draft → final operator answer`; без неё confidence нельзя калибровать по
+реальному результату.
+
 ## Критерий готовности
 
 Для каждой критичной деградации должен существовать наблюдаемый сигнал, владелец реакции и безопасное

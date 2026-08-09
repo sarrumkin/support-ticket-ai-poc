@@ -6,43 +6,55 @@ System Design проект AI/ML-системы для автоматизаци�
 
 ## Статус
 
-**Slice 1 — Repository bootstrap**, **Slice 2 — Ticket processing flow** и **Slice 3 — Architecture,
-capacity and latency** завершены. Product-level ticket flow отделён от reference implementation
-diagram; также зафиксированы lifecycle, delivery semantics и sizing под incident burst. Основной PoC
-ещё не реализован; следующий слайс будет определён только после отдельного checkpoint.
+Slices 1–4 завершены. В **Slice 4 — Minimal PoC ML baseline** реализован offline-first tracer:
+Pydantic/Protocol contracts, Scrubadub, versioned risk rules, scikit-learn intent classifier,
+exact lookup, FastEmbed + in-memory Qdrant, fixture/Groq generation adapters и fail-closed audit flow.
 
-## Планируемый demo-сценарий
+## Demo-сценарии
 
-1. На вход поступает синтетический mock-ticket.
-2. Система определяет тему, риск и confidence.
-3. Для безопасного типового тикета сначала ищет готовый approved answer; generation используется
-   только при отсутствии надёжного exact/semantic match.
-4. Для risky или low-confidence тикета выбирает маршрут к оператору.
-5. Оба пути записывают audit log решения.
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install -e '.[dev]'
+
+.venv/bin/python -m support_poc.demo exact
+.venv/bin/python -m support_poc.demo risky
+.venv/bin/python -m support_poc.demo generated
+```
+
+Первые два пути не требуют embedding model. `generated` при первом запуске скачивает примерно 220 MB
+multilingual MiniLM, строит локальный in-memory index и использует deterministic fixture generator.
+Все входы и KB fixtures синтетические.
+
+Optional Groq check включается явно и получает только redacted synthetic ticket:
+
+```bash
+GROQ_API_KEY=... .venv/bin/python -m support_poc.demo generated --generator groq
+RUN_GROQ_TESTS=1 GROQ_API_KEY=... .venv/bin/python -m pytest -q -m groq
+```
+
+Ключ не хранится в репозитории. Без него offline suite и demo полностью работоспособны.
 
 ## Реализация и target design
 
-- **Будет реализовано в PoC:** один воспроизводимый happy path, один risky/fallback path, локальные
-  fixtures, demo-скрипт, audit log и smoke-test.
+- **Реализовано в PoC:** exact/risky/generated/failure paths, synthetic fixtures, CLI, typed audit и
+  replaceable adapters.
 - **Останется архитектурным дизайном:** production queues, autoscaling, внешние интеграции, полноценная
-  vector DB, MLOps и обучение моделей на историческом потоке.
-- **Открытое решение:** конкретный ML/LLM baseline выбирается в отдельном слайсе; в bootstrap он не
-  фиксируется преждевременно.
+  vector DB service, MLOps, real-data evaluation и обучение на историческом потоке.
+- **Честная граница:** synthetic confidence и similarity thresholds не calibrated; Scrubadub не
+  является полноценным RU PII NER; generated content всегда требует проверки оператора.
 
-## Проверка Slice 3
-
-Пока основной PoC не реализован, доступен только synthetic CPU benchmark deterministic hot-path
-adapters:
+## Проверка
 
 ```bash
-python3 -m unittest discover -s tests -v
+.venv/bin/python -m pytest -q
+RUN_SEMANTIC_TESTS=1 .venv/bin/python -m pytest -q -m semantic
 python3 scripts/benchmark_hot_path.py --tickets 20000 --warmup 1000 \
   --min-throughput 67 --max-p95-ms 500
 ```
 
-Benchmark не поднимает PostgreSQL, broker, внешние providers или модели и не подтверждает
-production latency/replica sizing. Его назначение — воспроизводимо проверить арифметику thresholds,
-JSON report и локальный orchestration overhead.
+Обязательный pytest suite не использует сеть или API key. Marked semantic check скачивает локальную
+модель; Groq integration запускается отдельно. Benchmark Slice 3 не включает реальные dependencies и
+не подтверждает production latency/replica sizing.
 
 ## Ценность для бизнеса
 

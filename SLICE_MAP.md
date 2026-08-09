@@ -8,8 +8,9 @@
 
 Карта содержит только фактически начатые или завершённые слайсы. Будущие слайсы заранее не
 планируются и не добавляются как placeholders. Новый слайс появляется сразу со статусом
-`IN_PROGRESS` после явного checkpoint владельца; одновременно для него создаётся issue. В каждый
-момент активен не более чем один слайс.
+`IN_PROGRESS` после явного checkpoint владельца; одновременно для него создаётся issue. Несколько
+активных слайсов допустимы только при явно независимых scopes или записанной dependency; у каждого
+остаётся собственный checkpoint.
 
 ## Slice 1: Repository bootstrap
 
@@ -73,3 +74,27 @@ stdlib benchmark с сохранёнными командами и резуль�
 **Checkpoint:** product-level processing diagram возвращена к исходному простому flow; workers,
 outbox и provider delivery оставлены только в отдельной reference implementation diagram. Обе схемы
 прошли Mermaid rendering; следующий слайс не определяется автоматически.
+
+## Slice 4: Minimal PoC ML baseline
+
+**Status:** `DONE`
+
+**Issue:** [#4 — Slice 4: Minimal PoC ML baseline](https://github.com/sarrumkin/ai-hub-support-poc/issues/4)
+
+**Goal:** собрать минимальный сквозной ML PoC преимущественно из готовых библиотек, сохранив
+заменяемые component contracts и честную evidence boundary.
+
+**Included:** Pydantic contracts и Protocol interfaces, локальные PII/risk/intent adapters,
+exact/semantic resolution, Groq/Qwen и offline fixture generators, fail-closed routing, audit, CLI,
+smoke tests и документация упрощений.
+
+**Not included:** production infrastructure, реальные данные, fine-tuning, calibrated thresholds,
+полноценная RU PII NER, внешний broker/vector DB service и auto-send generated reply.
+
+**Verification:** offline tests без API key, CLI paths exact/risky/generated, optional Groq integration
+check, проверка заменяемости adapters и согласованности ML/risk/self-review документов.
+
+**Checkpoint:** offline suite прошёл (`12 passed`, два explicit optional checks skipped), реальный
+FastEmbed/Qdrant semantic check прошёл отдельно, CLI подтвердил exact/risky/generated outcomes.
+Groq network check не запускался без API key и не входит в обязательный suite. Contracts и adapters
+заменяемы, shortcuts/alternatives/Prod blockers записаны; следующий слайс не начинается автоматически.

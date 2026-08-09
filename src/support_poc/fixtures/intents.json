@@ -1,0 +1,32 @@
+{
+  "version": "poc-v1",
+  "examples": [
+  {"text": "где мой заказ", "intent": "order_status"},
+  {"text": "когда приедет заказ", "intent": "order_status"},
+  {"text": "хочу узнать статус заказа", "intent": "order_status"},
+  {"text": "заказ уже отправили", "intent": "order_status"},
+  {"text": "покажите движение посылки", "intent": "order_status"},
+  {"text": "когда ждать доставку", "intent": "order_status"},
+
+  {"text": "не могу войти в аккаунт", "intent": "account_access"},
+  {"text": "забыл пароль", "intent": "account_access"},
+  {"text": "как восстановить доступ", "intent": "account_access"},
+  {"text": "не приходит код входа", "intent": "account_access"},
+  {"text": "сбросить пароль", "intent": "account_access"},
+  {"text": "помогите авторизоваться", "intent": "account_access"},
+
+  {"text": "как изменить имя в профиле", "intent": "profile_update"},
+  {"text": "хочу поменять данные профиля", "intent": "profile_update"},
+  {"text": "где редактировать профиль", "intent": "profile_update"},
+  {"text": "изменить фамилию в аккаунте", "intent": "profile_update"},
+  {"text": "обновить личные данные", "intent": "profile_update"},
+  {"text": "как исправить имя", "intent": "profile_update"},
+
+  {"text": "доставка задерживается", "intent": "delivery_problem"},
+  {"text": "курьер не приехал", "intent": "delivery_problem"},
+  {"text": "посылка потерялась", "intent": "delivery_problem"},
+  {"text": "заказ доставили не туда", "intent": "delivery_problem"},
+  {"text": "не получил посылку", "intent": "delivery_problem"},
+  {"text": "проблема с курьером", "intent": "delivery_problem"}
+  ]
+}
