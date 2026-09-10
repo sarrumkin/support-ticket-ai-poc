@@ -177,7 +177,7 @@ explicit optional checks skipped); локальные Markdown-ссылки, lic
 
 ## Slice 7: Public release
 
-**Status:** `IN_PROGRESS`
+**Status:** `DONE`
 
 **Issue:** [#8 — Slice 7: Public release — support-ticket-ai-poc](https://github.com/sarrumkin/support-ticket-ai-poc/issues/8)
 
@@ -197,8 +197,9 @@ anonymous fresh-clone verification.
 **Verification:** staged-tree inventory и scans; offline tests и CLI smoke; точный approval dry run;
 после публикации — anonymous clone, install/test/demo, links и повторные privacy/security scans.
 
-**Checkpoint:** владелец подтвердил точный dry run для `sarrumkin/support-ticket-ai-poc`. Inventory
-#9 завершён: allowlist содержит 39 файлов, clean staging, scans, `27 passed`, два optional skips и
-CLI smoke прошли. Publish/verify выполняется в #10: разрешены согласованные history rewrite,
-force-push `main`, удаление obsolete remote branch, rename, About, security reporting и public
-visibility с последующей anonymous fresh-clone проверкой.
+**Checkpoint:** `sarrumkin/support-ticket-ai-poc` опубликован с MIT и GitHub About; remote содержит
+только очищенный `main` с 13 содержательными коммитами и GitHub noreply metadata. Anonymous clone
+вернул HTTP 200, установился на Python 3.13 и прошёл `27 passed`, два optional skips, exact/risky и
+девять synthetic scenarios. Повторные `detect-secrets`, private-path, history и local-link scans
+прошли; private vulnerability reporting включён. `gitleaks` и `trufflehog` были недоступны, что
+компенсировано manual, detect-secrets, Git history и fresh-clone проверками.
