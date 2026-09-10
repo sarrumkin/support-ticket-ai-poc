@@ -95,7 +95,7 @@ evidence validation и безопасный запрет generated auto-send. О
 
 ### Docker HTTP smoke
 
-Image `ai-hub-support-poc:slice5` успешно собран и запущен с одним worker. `/health` вернул
+Image `support-ticket-ai-poc:slice5` успешно собран и запущен с одним worker. `/health` вернул
 `generator_provider=fixture`, `storage=in_memory`, `delivery=polling_demo`.
 
 - Exact ticket: `202 processing_automatically → completed/answered`, outcome `auto_reply`, intent

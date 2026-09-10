@@ -182,7 +182,7 @@ def create_app(processor: TicketProcessor | None = None) -> FastAPI:
     settings = Settings.from_env()
     store = InMemoryJobStore()
     runner = BackgroundJobRunner(processor or build_processor(settings), store)
-    app = FastAPI(title="AI Hub Support PoC", version="0.1.0")
+    app = FastAPI(title="Support Ticket AI PoC", version="0.1.0")
 
     @app.get("/health", response_model=HealthResponse)
     def health() -> HealthResponse:

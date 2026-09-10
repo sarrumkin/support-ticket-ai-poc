@@ -3,8 +3,8 @@
 **Статус:** проектный контракт Slice 2; реализация отсутствует.
 
 Документ определяет outcomes, policy, пользовательские статусы и end-to-end flow. Компонентные
-границы целевой системы описаны в [`docs/architecture.md`](architecture.md), исходные требования — в
-[`docs/original-requirements.md`](original-requirements.md).
+границы целевой системы описаны в [`docs/architecture.md`](architecture.md), требования и scope — в
+[`docs/brief.md`](brief.md).
 
 ## Продуктовая граница
 

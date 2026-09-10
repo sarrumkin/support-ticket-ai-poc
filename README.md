@@ -1,4 +1,4 @@
-# AI Hub Support PoC
+# Support Ticket AI PoC
 
 Минимальный воспроизводимый PoC AI/ML-системы для обработки тикетов поддержки: быстрый risk-aware
 routing, поиск готового ответа, генерация draft, HTTP polling API и audit trail.
@@ -53,8 +53,8 @@ polling. Интерактивная OpenAPI-схема — на `http://localhos
 Запуск в Docker:
 
 ```bash
-docker build -t support-poc .
-docker run --rm -p 8000:8000 support-poc
+docker build -t support-ticket-ai-poc .
+docker run --rm -p 8000:8000 support-ticket-ai-poc
 ```
 
 ## Синтетические тестовые запросы
@@ -125,3 +125,15 @@ RUN_GROQ_TESTS=1 GROQ_API_KEY=... .venv/bin/python -m pytest -q -m groq
 - [Использование AI](AI_USAGE.md)
 - [Self-review](SELF_REVIEW.md)
 - [Карта выполненных слайсов](SLICE_MAP.md)
+- [Политика безопасности](SECURITY.md)
+- [Сторонние компоненты](THIRD_PARTY_NOTICES.md)
+
+## Поддержка
+
+Проект поддерживается [@sarrumkin](https://github.com/sarrumkin) в режиме best effort как учебный
+и демонстрационный PoC. Совместимость заявлена для Python 3.13+; production support и фиксированный
+график релизов не предоставляются.
+
+## Лицензия
+
+Исходный код и документация проекта распространяются по лицензии [MIT](LICENSE).

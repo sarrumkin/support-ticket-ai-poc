@@ -1,5 +1,9 @@
 .git
+.env
+.env.*
 .venv
+.project
+.serena
 __pycache__
 .pytest_cache
 tests

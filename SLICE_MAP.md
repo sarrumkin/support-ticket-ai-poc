@@ -16,7 +16,7 @@
 
 **Status:** `DONE`
 
-**Issue:** [#1 — Slice 1: Repository bootstrap](https://github.com/sarrumkin/ai-hub-support-poc/issues/1)
+**Issue:** [#1 — Slice 1: Repository bootstrap](https://github.com/sarrumkin/support-ticket-ai-poc/issues/1)
 
 **Goal:** создать управляемую структуру репозитория, правила работы, живой журнал решений и связь с
 GitHub Project.
@@ -35,7 +35,7 @@ repository-level Project link и один issue Slice 1.
 
 **Status:** `DONE`
 
-**Issue:** [#2 — Slice 2: Ticket processing flow](https://github.com/sarrumkin/ai-hub-support-poc/issues/2)
+**Issue:** [#2 — Slice 2: Ticket processing flow](https://github.com/sarrumkin/support-ticket-ai-poc/issues/2)
 
 **Goal:** определить end-to-end flow обработки тикета от ingress до ответа пользователю или передачи
 оператору.
@@ -57,7 +57,7 @@ production-решения.
 
 **Status:** `DONE`
 
-**Issue:** [#3 — Slice 3: Architecture, capacity and latency](https://github.com/sarrumkin/ai-hub-support-poc/issues/3)
+**Issue:** [#3 — Slice 3: Architecture, capacity and latency](https://github.com/sarrumkin/support-ticket-ai-poc/issues/3)
 
 **Goal:** доработать target architecture на основе processing contract, определить lifecycle и
 delivery semantics, рассчитать capacity/latency и получить честный локальный microbenchmark.
@@ -79,7 +79,7 @@ outbox и provider delivery оставлены только в отдельно�
 
 **Status:** `DONE`
 
-**Issue:** [#4 — Slice 4: Minimal PoC ML baseline](https://github.com/sarrumkin/ai-hub-support-poc/issues/4)
+**Issue:** [#4 — Slice 4: Minimal PoC ML baseline](https://github.com/sarrumkin/support-ticket-ai-poc/issues/4)
 
 **Goal:** собрать минимальный сквозной ML PoC преимущественно из готовых библиотек, сохранив
 заменяемые component contracts и честную evidence boundary.
@@ -103,7 +103,7 @@ Groq network check не запускался без API key и не входит
 
 **Status:** `DONE`
 
-**Issue:** [#5 — Slice 5: Async FastAPI PoC](https://github.com/sarrumkin/ai-hub-support-poc/issues/5)
+**Issue:** [#5 — Slice 5: Async FastAPI PoC](https://github.com/sarrumkin/support-ticket-ai-poc/issues/5)
 
 **Goal:** обернуть ML pipeline в минимальный HTTP PoC с быстрым `202`, background processing,
 in-memory state, polling и Docker.
@@ -124,7 +124,7 @@ local semantic и external Groq checks. Synthetic Groq probe вернул ground
 
 **Status:** `DONE`
 
-**Issue:** [#6 — Sub-slice 5.1: Synthetic test request generation](https://github.com/sarrumkin/ai-hub-support-poc/issues/6)
+**Issue:** [#6 — Sub-slice 5.1: Synthetic test request generation](https://github.com/sarrumkin/support-ticket-ai-poc/issues/6)
 
 **Dependency:** использует стабильные `TicketInput`, `ProcessingResult` и `TicketProcessor` из Slice 4.
 Scope не зависит от FastAPI/Docker-реализации Slice 5 и не меняет ML или HTTP contracts, поэтому
@@ -151,3 +151,54 @@ passed`), полный offline suite прошёл (`23 passed`, два explicit 
 orchestration/audit contracts, но не ML quality или semantic relevance; расширение в
 load/evaluation/red-team scope требует отдельного checkpoint. Команды, покрытие и evidence boundary
 дополнительно зафиксированы в `docs/monitoring.md`.
+
+## Slice 6: Public release license and provenance cleanup
+
+**Status:** `DONE`
+
+**Issue:** [#7 — Slice 6: Public release license and provenance cleanup](https://github.com/sarrumkin/support-ticket-ai-poc/issues/7)
+
+**Goal:** убрать из public-кандидата исходную формулировку задания с неподтверждёнными правами на
+распространение и явно лицензировать авторский код и документацию.
+
+**Included:** удаление `docs/original-requirements.md` и ссылок на него; корневая MIT-лицензия;
+license metadata в package и README; проверка ссылок, package metadata и offline regression suite.
+
+**Not included:** изменение visibility репозитория или Project, переписывание commit metadata,
+удаление Owner Context, release manifest/allowlist и полный secret-scanner gate.
+
+**Verification:** отсутствие исходного файла и stale-ссылок; MIT в `LICENSE`, README и package
+metadata; корректные локальные Markdown-ссылки; `git diff --check`; полный offline pytest suite.
+
+**Checkpoint:** исходная формулировка задания удалена вместе со stale-ссылками; MIT-лицензия
+добавлена в корень, README и package metadata. Полный offline suite прошёл (`27 passed`, два
+explicit optional checks skipped); локальные Markdown-ссылки, license metadata и `git diff --check`
+прошли. Visibility репозитория не менялась; остальные release blockers остаются вне scope.
+
+## Slice 7: Public release
+
+**Status:** `IN_PROGRESS`
+
+**Issue:** [#8 — Slice 7: Public release — support-ticket-ai-poc](https://github.com/sarrumkin/support-ticket-ai-poc/issues/8)
+
+**Children:** [#9 — inventory and review](https://github.com/sarrumkin/support-ticket-ai-poc/issues/9),
+[#10 — publish and verify](https://github.com/sarrumkin/support-ticket-ai-poc/issues/10).
+
+**Goal:** подготовить и опубликовать репозиторий как vendor-neutral `support-ticket-ai-poc`, не
+раскрывая runtime state, приватный Owner Context или корпоративный email из Git-истории.
+
+**Included:** public identity проекта и GitHub About; release manifest и allowlist; удаление
+tool-specific state; privacy/license/security review; переписывание author metadata; публикация;
+anonymous fresh-clone verification.
+
+**Not included:** production deployment, новые ML-возможности, реальные данные или публикация
+приватного GitHub Project.
+
+**Verification:** staged-tree inventory и scans; offline tests и CLI smoke; точный approval dry run;
+после публикации — anonymous clone, install/test/demo, links и повторные privacy/security scans.
+
+**Checkpoint:** владелец подтвердил точный dry run для `sarrumkin/support-ticket-ai-poc`. Inventory
+#9 завершён: allowlist содержит 39 файлов, clean staging, scans, `27 passed`, два optional skips и
+CLI smoke прошли. Publish/verify выполняется в #10: разрешены согласованные history rewrite,
+force-push `main`, удаление obsolete remote branch, rename, About, security reporting и public
+visibility с последующей anonymous fresh-clone проверкой.
